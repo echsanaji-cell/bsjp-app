@@ -1,0 +1,6 @@
+venv/
+__pycache__/
+*.pyc
+.env
+*.db
+hasil_backtest.csv.DS_Store

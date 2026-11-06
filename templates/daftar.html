@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block judul %}Daftar Saham{% endblock %}
+{% block isi %}
+<h1>Daftar Saham yang Dipantau</h1>
+<p class="info">Pakai kode yang sama seperti di Stockbit (4 huruf), contoh: BBCA. Pilih saham yang transaksinya ramai.</p>
+
+<form method="post" class="form-tambah">
+  <input type="hidden" name="aksi" value="tambah">
+  <input type="text" name="kode" placeholder="Satu atau banyak kode, mis. BBCA BMRI TLKM" required>
+  <button class="tombol" type="submit">Tambah</button>
+</form>
+
+<div class="daftar">
+  {% for kode in daftar %}
+  <form method="post" class="chip">
+    <input type="hidden" name="aksi" value="hapus">
+    <input type="hidden" name="kode" value="{{ kode }}">
+    <span>{{ kode }}</span>
+    <button type="submit" title="Hapus {{ kode }}">✕</button>
+  </form>
+  {% endfor %}
+</div>
+{% endblock %}

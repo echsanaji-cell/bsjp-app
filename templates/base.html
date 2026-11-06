@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block judul %}BSJP{% endblock %} | Analisa BSJP</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <nav>
+    <a class="logo" href="{{ url_for('index') }}">📈 Analisa BSJP</a>
+    <a href="{{ url_for('index') }}">Kandidat</a>
+    <a href="{{ url_for('halaman_daftar') }}">Daftar Saham</a>
+    <a href="{{ url_for('halaman_jurnal') }}">Jurnal</a>
+    <a href="{{ url_for('halaman_uji_depan') }}">Uji Aturan F</a>
+  </nav>
+
+  <main>
+    {% with pesan = get_flashed_messages(with_categories=true) %}
+      {% for kategori, isi in pesan %}
+        <div class="notif {{ kategori }}">{{ isi }}</div>
+      {% endfor %}
+    {% endwith %}
+    {% block isi %}{% endblock %}
+  </main>
+
+  <footer>
+    Alat bantu analisa, <b>bukan nasihat investasi dan bukan jaminan untung</b>.
+    Saham bisa turun kapan saja, termasuk di pagi hari setelah kamu beli.
+    Selalu cek harga terakhir di Stockbit sebelum memutuskan, dan hanya pakai uang yang siap rugi.
+  </footer>
+</body>
+</html>

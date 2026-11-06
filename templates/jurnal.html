@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+{% block judul %}Jurnal{% endblock %}
+{% block isi %}
+{% macro rp(x) %}{{ "-" if x < 0 }}Rp{{ "{:,.0f}".format(x|abs) }}{% endmacro %}
+
+<h1>Jurnal Transaksi</h1>
+<p class="info">Catat pembelian dan penjualan yang kamu lakukan di Stockbit. Setelah beberapa transaksi, kelihatan apakah caramu benar-benar untung. Untung/rugi dihitung bersih setelah perkiraan biaya.</p>
+
+{% if stat %}
+<div class="statistik">
+  <div><span>Transaksi selesai</span><b>{{ stat.jumlah }}</b></div>
+  <div><span>Menang</span><b>{{ "%.0f"|format(stat.menang_pct) }}%</b></div>
+  <div><span>Total untung/rugi</span><b class="{{ 'naik' if stat.total >= 0 else 'turun' }}">{{ rp(stat.total) }}</b></div>
+  <div><span>Rata-rata untung</span><b class="naik">{{ rp(stat.rata_untung) }}</b></div>
+  <div><span>Rata-rata rugi</span><b class="turun">{{ rp(stat.rata_rugi) }}</b></div>
+  <div><span>Rata-rata per transaksi</span><b class="{{ 'naik' if stat.per_transaksi >= 0 else 'turun' }}">{{ rp(stat.per_transaksi) }}</b></div>
+</div>
+{% endif %}
+
+<h2>Catat pembelian</h2>
+<form method="post" class="form-kalk">
+  <input type="hidden" name="aksi" value="beli">
+  <label>Kode saham
+    <input type="text" name="kode" maxlength="4" required>
+  </label>
+  <label>Tanggal beli
+    <input type="date" name="tanggal" value="{{ hari_ini }}">
+  </label>
+  <label>Harga beli (Rp)
+    <input type="text" name="harga" inputmode="numeric" required>
+  </label>
+  <label>Jumlah (lot)
+    <input type="text" name="lot" inputmode="numeric" required>
+  </label>
+  <label>Stop loss (Rp, opsional)
+    <input type="text" name="stop" inputmode="numeric">
+  </label>
+  <label>Target jual (Rp, opsional)
+    <input type="text" name="target" inputmode="numeric">
+  </label>
+  <label>Catatan (opsional)
+    <input type="text" name="catatan">
+  </label>
+  <button class="tombol" type="submit">Simpan</button>
+</form>
+
+<h2>Posisi terbuka (belum dijual)</h2>
+{% if not terbuka %}
+<p class="info">Belum ada posisi terbuka.</p>
+{% else %}
+<div class="gulir">
+<table class="tabel-kalk">
+  {% for t in terbuka %}
+  <tr>
+    <td>
+      <b><a href="{{ url_for('detail', kode=t.kode) }}">{{ t.kode }}</a></b>
+      · {{ t.lot }} lot @ Rp{{ "{:,.0f}".format(t.harga_beli) }}<br>
+      <span class="info">Beli {{ t.tgl_beli }}
+      {% if t.stop_loss %} · SL Rp{{ "{:,.0f}".format(t.stop_loss) }}{% endif %}
+      {% if t.target %} · Target Rp{{ "{:,.0f}".format(t.target) }}{% endif %}
+      {% if t.catatan %} · {{ t.catatan }}{% endif %}</span>
+    </td>
+    <td>
+      <form method="post" class="baris-jual">
+        <input type="hidden" name="aksi" value="jual">
+        <input type="hidden" name="id" value="{{ t.id }}">
+        <input type="text" name="harga" placeholder="Harga jual" inputmode="numeric" required>
+        <input type="date" name="tanggal" value="{{ hari_ini }}">
+        <button class="tombol" type="submit">Jual</button>
+      </form>
+      <form method="post" onsubmit="return confirm('Hapus catatan ini?')">
+        <input type="hidden" name="aksi" value="hapus">
+        <input type="hidden" name="id" value="{{ t.id }}">
+        <button class="tombol-kecil" type="submit">Hapus</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<h2>Riwayat</h2>
+{% if not riwayat %}
+<p class="info">Belum ada transaksi yang selesai.</p>
+{% else %}
+<div class="gulir">
+<table class="tabel-kalk">
+  {% for t in riwayat %}
+  <tr>
+    <td>
+      <b>{{ t.kode }}</b> · {{ t.lot }} lot<br>
+      <span class="info">{{ t.tgl_beli }} &rarr; {{ t.tgl_jual }}
+      · Rp{{ "{:,.0f}".format(t.harga_beli) }} &rarr; Rp{{ "{:,.0f}".format(t.harga_jual) }}
+      {% if t.catatan %} · {{ t.catatan }}{% endif %}</span>
+    </td>
+    <td class="{{ 'naik' if t.untung >= 0 else 'turun' }}">
+      <b>{{ rp(t.untung) }}</b><br>{{ "%+.2f"|format(t.untung_pct) }}%
+      <form method="post" onsubmit="return confirm('Hapus catatan ini?')">
+        <input type="hidden" name="aksi" value="hapus">
+        <input type="hidden" name="id" value="{{ t.id }}">
+        <button class="tombol-kecil" type="submit">Hapus</button>
+      </form>
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+{% endblock %}

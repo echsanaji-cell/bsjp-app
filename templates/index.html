@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block judul %}Kandidat{% endblock %}
+{% block isi %}
+<h1>Kandidat BSJP</h1>
+<p class="info">
+  Diperbarui pukul {{ jam }} WIB · {{ total }} saham dipantau ·
+  <a href="{{ url_for('index', segarkan=1) }}">Segarkan data</a>
+</p>
+
+<div class="notif peringatan">
+  <b>Skor ini belum terbukti.</b> Dalam uji data 3 tahun di 40 saham, saham berlabel
+  "Layak dipantau" tidak lebih untung daripada rata-rata semua hari kalau dijual di harga buka besok
+  (sekitar -0,17% setelah biaya, dibanding -0,20% untuk semua hari). Pakai halaman ini untuk belajar
+  membaca grafik, bukan sebagai sinyal beli.
+</div>
+
+{% if not final %}
+<div class="notif peringatan">
+  <b>Bursa masih buka.</b> Data hari ini belum final dan volume belum dinilai.
+  Untuk BSJP, buka halaman ini menjelang penutupan (sekitar 15.30-15.50 WIB).
+</div>
+{% endif %}
+
+{% if not hasil %}
+<p>Belum ada hasil. Cek koneksi internet atau tambah saham di menu Daftar Saham.</p>
+{% endif %}
+
+{% for h in hasil %}
+{% set warna = {'Layak dipantau': 'hijau', 'Waspada': 'kuning', 'Hindari': 'merah'}[h.label] %}
+<div class="kartu {{ warna }}">
+  <div class="kartu-atas">
+    <div>
+      <span class="kode">{{ h.kode }}</span>
+      <span class="badge {{ warna }}">{{ h.label }}</span>
+    </div>
+    <div class="harga">
+      Rp{{ "{:,.0f}".format(h.close) }}
+      <span class="{{ 'naik' if h.perubahan_pct >= 0 else 'turun' }}">{{ "%+.1f"|format(h.perubahan_pct) }}%</span>
+    </div>
+  </div>
+  <div class="bar"><div class="bar-isi {{ warna }}" style="width: {{ h.skor }}%"></div></div>
+  <div class="skor">Skor {{ h.skor }}/100</div>
+  <details>
+    <summary>Kenapa nilainya begini?</summary>
+    <ul>{% for a in h.alasan %}<li>{{ a }}</li>{% endfor %}</ul>
+  </details>
+  <a class="tombol" href="{{ url_for('detail', kode=h.kode) }}">Lihat grafik</a>
+</div>
+{% endfor %}
+
+<div class="panduan">
+  <h2>Cara membaca</h2>
+  <p><span class="badge hijau">Layak dipantau</span> banyak ciri BSJP klasik terpenuhi (tren, volume, posisi harga). Ini hanya ringkasan ciri, <b>bukan prediksi</b>: di uji historis, label ini belum terbukti lebih baik daripada saham lain.</p>
+  <p><span class="badge kuning">Waspada</span> sebagian ciri terpenuhi.</p>
+  <p><span class="badge merah">Hindari</span> ciri banyak tidak terpenuhi, atau sahamnya berisiko (terlalu murah/sepi). Di uji historis, label ini pun belum terbukti lebih buruk.</p>
+  <p>Beli sore dan jual pagi punya biaya nyata: fee sekitar 0,40% pulang-pergi ditambah selisih harga jual-beli (spread). Kemungkinan rugi lebih besar daripada kemungkinan untung, jadi mulailah dengan uang yang siap hilang.</p>
+</div>
+{% endblock %}

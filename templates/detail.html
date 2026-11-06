@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block judul %}{{ h.kode }}{% endblock %}
+{% block isi %}
+{% set warna = {'Layak dipantau': 'hijau', 'Waspada': 'kuning', 'Hindari': 'merah'}[h.label] %}
+<p><a href="{{ url_for('index') }}">&larr; Kembali</a></p>
+<h1>{{ h.kode }} <span class="badge {{ warna }}">{{ h.label }}</span></h1>
+<p class="info">
+  Close {{ h.tanggal }}: <b>Rp{{ "{:,.0f}".format(h.close) }}</b>
+  ({{ "%+.1f"|format(h.perubahan_pct) }}%) · Skor {{ h.skor }}/100
+</p>
+
+<div class="notif peringatan">
+  Skor {{ h.skor }}/100 hanya merangkum ciri teknikal hari ini. Belum terbukti memprediksi harga besok.
+</div>
+
+<div class="kartu {{ warna }}">
+  <b>Alasan penilaian</b>
+  <ul>{% for a in h.alasan %}<li>{{ a }}</li>{% endfor %}</ul>
+</div>
+
+<h2>Grafik 6 bulan</h2>
+{{ grafik|safe }}
+
+<h2 id="kalkulator">Kalkulator lot &amp; risiko</h2>
+<p class="info">Isi modal dan batas rugi yang kamu rela tanggung. Aplikasi menghitung berapa lot yang masuk akal.</p>
+
+<form method="get" action="{{ url_for('detail', kode=h.kode) }}#kalkulator" class="form-kalk">
+  <label>Modal untuk trading (Rp)
+    <input type="text" name="modal" value="{{ form.modal }}" placeholder="mis. 10000000" inputmode="numeric" required>
+  </label>
+  <label>Harga beli (Rp), kosongkan = harga terakhir
+    <input type="text" name="harga" value="{{ form.harga }}" inputmode="numeric">
+  </label>
+  <label>Batas rugi / stop loss (%)
+    <input type="text" name="stop" value="{{ form.stop }}">
+  </label>
+  <label>Target untung (%)
+    <input type="text" name="target" value="{{ form.target }}">
+  </label>
+  <label>Risiko maks. per transaksi (% dari modal)
+    <input type="text" name="risiko" value="{{ form.risiko }}">
+  </label>
+  <button class="tombol" type="submit">Hitung</button>
+</form>
+
+{% if rencana %}
+  {% if rencana.lot == 0 %}
+  <div class="notif error">
+    Belum cukup untuk 1 lot. Satu lot butuh sekitar Rp{{ "{:,.0f}".format(rencana.biaya_1_lot) }}
+    dan bisa rugi sekitar Rp{{ "{:,.0f}".format(rencana.rugi_1_lot) }} kalau kena stop loss.
+    Naikkan modal atau batas risiko, atau pilih saham yang harganya lebih rendah.
+  </div>
+  {% else %}
+  <table class="tabel-kalk">
+    <tr><td>Harga beli</td><td>Rp{{ "{:,.0f}".format(rencana.harga_beli) }}</td></tr>
+    <tr><td>Jumlah beli</td><td><b>{{ rencana.lot }} lot</b> ({{ "{:,.0f}".format(rencana.lembar) }} lembar), dibatasi oleh {{ rencana.pembatas }}</td></tr>
+    <tr><td>Uang keluar (termasuk biaya)</td><td>Rp{{ "{:,.0f}".format(rencana.total_beli) }}</td></tr>
+    <tr><td>Stop loss</td><td>Rp{{ "{:,.0f}".format(rencana.stop) }} &rarr; rugi sekitar <span class="turun">Rp{{ "{:,.0f}".format(rencana.rugi_stop) }}</span> ({{ "%.1f"|format(rencana.rugi_stop_pct) }}% dari modal)</td></tr>
+    <tr><td>Target jual</td><td>Rp{{ "{:,.0f}".format(rencana.target) }} &rarr; untung bersih sekitar <span class="naik">Rp{{ "{:,.0f}".format(rencana.untung_target) }}</span></td></tr>
+    <tr><td>Rasio untung : rugi</td><td>1 : {{ "%.2f"|format(1 / rencana.rasio) if rencana.rasio > 0 else "-" }}</td></tr>
+    <tr><td>Harga impas (balik modal)</td><td>Rp{{ "{:,.0f}".format(rencana.impas) }}</td></tr>
+  </table>
+
+  {% if rencana.rasio < 1 %}
+  <div class="notif peringatan">Potensi untung lebih kecil dari potensi rugi. Pertimbangkan target yang lebih tinggi atau stop loss yang lebih ketat.</div>
+  {% endif %}
+  {% endif %}
+
+  <div class="notif peringatan">
+    <b>Ingat:</b> stop loss bukan jaminan. Kalau besok pagi harga dibuka jauh di bawah stop loss (gap down),
+    kamu bisa rugi lebih besar dari hitungan di atas. Biaya beli {{ "0.15" }}% dan jual {{ "0.25" }}% adalah perkiraan,
+    cek biaya sebenarnya di akun Stockbit-mu.
+  </div>
+{% endif %}
+
+<div class="panduan">
+  <h2>Apa artinya?</h2>
+  <p><b>Candlestick:</b> satu batang = satu hari. Hijau berarti harga naik, merah berarti turun. Garis tipis menunjukkan harga tertinggi dan terendah hari itu.</p>
+  <p><b>Rata-rata 20 hari:</b> harga rata-rata sebulan terakhir. Harga di atas garis ini biasanya berarti tren sedang naik.</p>
+  <p><b>Volume:</b> banyaknya saham yang diperdagangkan. Volume besar berarti banyak peminat, jadi lebih mudah dijual lagi.</p>
+  <p><b>RSI:</b> ukuran seberapa "panas" harga. Di atas sekitar 70-75 biasanya sudah terlalu ramai dibeli dan rawan turun.</p>
+</div>
+{% endblock %}

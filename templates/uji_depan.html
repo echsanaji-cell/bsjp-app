@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block judul %}Uji ke Depan{% endblock %}
+{% block isi %}
+<h1>Uji ke Depan: Aturan F</h1>
+<p class="info">
+  Setiap sore setelah bursa tutup, saham yang memenuhi aturan F dicatat di sini tanpa uang sungguhan.
+  Paginya, harga buka dicatat dan hasil bersihnya dihitung (sudah dikurangi fee).
+  Aturan F: naik minimal 3% hari itu, dan close di bawah 80% rentang harian (tidak di puncak).
+  Aturan dan kriteria tidak diubah selama uji berjalan.
+</p>
+
+<form method="post" onsubmit="this.querySelector('button').disabled = true; this.querySelector('button').textContent = 'Memproses, tunggu sekitar satu menit...';">
+  <button class="tombol" type="submit">Catat sinyal &amp; perbarui hasil</button>
+</form>
+<p class="info">Jalankan sekali tiap sore setelah jam 16.15 WIB (data sudah final). Hari yang terlewat akan terkejar otomatis.</p>
+
+<div class="notif {{ stat.vonis_kelas }}">
+  <b>{{ stat.vonis_judul }}.</b> {{ stat.vonis_teks }}
+</div>
+
+<div class="statistik">
+  <div><span>Sinyal tercatat</span><b>{{ stat.tercatat }}</b></div>
+  <div><span>Sudah ada hasil</span><b>{{ stat.selesai }}</b></div>
+  <div><span>Menunggu harga buka</span><b>{{ stat.menunggu }}</b></div>
+  <div><span>Hari bursa dengan sinyal</span><b>{{ stat.hari }}</b></div>
+  {% if stat.selesai %}
+  <div><span>Rata-rata hasil bersih</span><b class="{{ 'naik' if stat.rata >= 0 else 'turun' }}">{{ "%+.2f"|format(stat.rata) }}%</b></div>
+  <div><span>Setelah spread (perkiraan 0,3%)</span><b class="{{ 'naik' if stat.setelah_spread >= 0 else 'turun' }}">{{ "%+.2f"|format(stat.setelah_spread) }}%</b></div>
+  <div><span>Naik di harga buka</span><b>{{ "%.0f"|format(stat.naik_pct) }}%</b></div>
+  {% if stat.bawah == stat.bawah %}
+  <div><span>Batas bawah 95% (kasar)</span><b>{{ "%+.2f"|format(stat.bawah) }}%</b></div>
+  {% endif %}
+  {% endif %}
+</div>
+
+<h2>Sinyal terbaru</h2>
+{% if not stat.baris %}
+<p class="info">Belum ada sinyal. Tekan tombol di atas setelah bursa tutup. Hanya sinyal pada atau setelah 6 November 2026 yang dihitung.</p>
+{% else %}
+<div class="gulir">
+<table class="tabel-kalk">
+  {% for b in stat.baris %}
+  <tr>
+    <td>
+      <b><a href="{{ url_for('detail', kode=b.kode) }}">{{ b.kode }}</a></b>
+      · {{ b.tgl_sinyal }}<br>
+      <span class="info">Close Rp{{ "{:,.0f}".format(b.harga_close) }}
+      ({{ "%+.1f"|format(b.perubahan_pct) }}%) · posisi close {{ "%.2f"|format(b.posisi_close) }}</span>
+    </td>
+    <td>
+      {% if b.ret_buka is none %}
+        <span class="info">menunggu harga buka</span>
+      {% else %}
+        <b class="{{ 'naik' if b.ret_buka >= 0 else 'turun' }}">{{ "%+.2f"|format(b.ret_buka) }}%</b><br>
+        <span class="info">buka {{ b.tgl_buka }} Rp{{ "{:,.0f}".format(b.harga_buka) }}</span>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
+{% endif %}
+
+<div class="panduan">
+  <h2>Cara membaca</h2>
+  <p>Hasil dihitung dengan rumus yang sama seperti backtest: beli di harga close, jual di harga buka besok, setelah fee beli 0,15% dan fee jual 0,25%. Spread tidak ikut dihitung di angka utama, makanya ada baris "setelah spread".</p>
+  <p>Kriteria (dikunci sebelum ada data): minimal {{ stat.min_indikasi }} sinyal selesai untuk indikasi awal, {{ stat.min_vonis }} untuk vonis. Lolos kalau rata-rata di atas 0,3% dan batas bawah 95% positif. Batas bawah di sini cenderung terlalu optimis karena sinyal di hari yang sama saling berkaitan.</p>
+</div>
+{% endblock %}
