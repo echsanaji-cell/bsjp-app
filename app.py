@@ -12,7 +12,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 import plotly.graph_objects as go
-from flask import Flask, flash, redirect, render_template, request, url_for
+from flask import Flask, flash, redirect, render_template, request, send_from_directory, url_for
 
 from data_source import DAFTAR_SAHAM_AWAL, ambil_harga
 from screener import analisa_saham, bursa_sudah_tutup, jalankan_screener
@@ -203,6 +203,22 @@ def halaman_jurnal():
         stat=jurnal.ringkasan(riwayat),
         hari_ini=hari_ini,
     )
+
+@app.route("/manifest.webmanifest")
+def manifest():
+    """File manifest PWA (nama, ikon, warna) supaya bisa dipasang di layar utama HP."""
+    resp = send_from_directory(app.static_folder, "manifest.webmanifest",
+                               mimetype="application/manifest+json")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
+
+
+@app.route("/sw.js")
+def service_worker():
+    """Service worker harus disajikan dari akar situs ('/') supaya cakupannya seluruh aplikasi."""
+    resp = send_from_directory(app.static_folder, "sw.js", mimetype="application/javascript")
+    resp.headers["Cache-Control"] = "no-cache"
+    return resp
 
 @app.route("/uji-depan", methods=["GET", "POST"])
 def halaman_uji_depan():

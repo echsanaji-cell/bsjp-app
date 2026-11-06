@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>{% block judul %}BSJP{% endblock %} | Analisa BSJP</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="manifest" href="{{ url_for('manifest') }}" crossorigin="use-credentials">
+  <meta name="theme-color" content="#12324a">
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='icons/icon-192.png') }}">
+  <link rel="apple-touch-icon" href="{{ url_for('static', filename='icons/apple-touch-icon.png') }}">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="BSJP">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body>
   <nav>
@@ -29,5 +37,13 @@
     Saham bisa turun kapan saja, termasuk di pagi hari setelah kamu beli.
     Selalu cek harga terakhir di Stockbit sebelum memutuskan, dan hanya pakai uang yang siap rugi.
   </footer>
+
+  <script>
+    if ("serviceWorker" in navigator) {
+      window.addEventListener("load", function () {
+        navigator.serviceWorker.register("/sw.js").catch(function () {});
+      });
+    }
+  </script>
 </body>
 </html>
